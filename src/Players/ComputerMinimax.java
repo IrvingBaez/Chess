@@ -109,11 +109,13 @@ public class ComputerMinimax extends ChessPlayer{
     private void constructTree(ChessNode node){
         if(stopSearching)
                return;
-        Board board = node.getBoard();
-        ArrayList<Piece> pieces = node.getBoard().getPieces();
-        this.sortPieces(pieces);
         
-        if(board.getMoves(node.getBoard().getTurn()).isEmpty()){
+        Board board = node.getBoard();
+        
+        node.fillBranches();
+        ArrayList<ChessNode> branches = node.getBranches();
+        
+        if(branches.isEmpty()){
             node.setValue(strat.analize(board));
             shouldStop(strat.analize(board));
             if(stopSearching){
@@ -121,45 +123,31 @@ public class ComputerMinimax extends ChessPlayer{
             }
         }
         
-        for(Piece piece : pieces){
-            if(piece.getColor() == node.getBoard().getTurn()){
-                for(Position pos : piece.getMoves()){
-                    if(stopSearching)
-                        return;
-                    Move move = new Move(piece, piece.getPosition(), pos);
-                    Board newBoard = board.copyAndMove(move);
-                    switch (board.getTurn()) {
-                        case WHITE:
-                            newBoard.setTurn(Color.BLACK);
-                            break;
-                        case BLACK:
-                            newBoard.setTurn(Color.WHITE);
-                            break;
-                    }
-                    
-                    if(node.getDepth() < this.depth){
-                        newBoard.fillSights();
-                        newBoard.fillMoves();
-                        ChessNode newBranch = new ChessNode(null, move, newBoard);
-                        node.addBranch(newBranch);
-                        constructTree(newBranch);
-                    }else{
-                        String fen = newBoard.getPositionFen();
-                        double value = calculatedVal(fen);
-                        if(Double.isNaN(value)){
-                            value = strat.analize(newBoard);
-                            this.addToCalculated(new FenWithVal(fen, value));
-                            calc++;
-                            node.addBranch(new ChessNode(value, move, newBoard));
-                        }else{
-                            node.addBranch(new ChessNode(value, move, newBoard));
-                        }
-                        shouldStop(value);
-                        if (stopSearching){
-                            System.out.println(newBoard.getPositionFen());
-                            this.print = true;
-                        }
-                    }
+        for(ChessNode branch : branches){
+            if(stopSearching)
+                return;
+
+            if(branch.getDepth() < this.depth){
+                //Continuar construcción.
+                constructTree(branch);
+            }else{
+                //Evaluar con estrategia.
+                String fen = branch.getBoard().getPositionFen();
+                double value = calculatedVal(fen);
+                if(Double.isNaN(value)){
+                    //Posición no evaluada antes.
+                    value = strat.analize(branch.getBoard());
+                    this.addToCalculated(new FenWithVal(fen, value));
+                    calc++;
+                    branch.setValue(value);
+                }else{
+                    //Posición ya evaluada.
+                    branch.setValue(strat.analize(branch.getBoard()));
+                }
+                shouldStop(value);
+                if (stopSearching){
+                    System.out.println(branch.getBoard().getPositionFen());
+                    this.print = true;
                 }
             }
         }

@@ -58,11 +58,10 @@ public class NodeWithID <T extends Comparable, I> {
         int depth = 0;
         
         NodeWithID node = this;
-        while(node.parent!=null){
+        while(node.getParent() != null){
             depth++;
             node = node.getParent();
         }
-        
         return depth;
     }
 

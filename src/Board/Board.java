@@ -3,6 +3,7 @@ package Board;
 import Board.Position.Column;
 import Pieces.*;
 import Pieces.Piece.Color;
+import static Pieces.Piece.Color.WHITE;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
@@ -123,6 +124,12 @@ public class Board implements Cloneable {
     public Board copyAndMove(Move move){
         Board boardCopy = Board.copyBoard(this);
         boardCopy.move(move);
+        
+        if(this.turn == Piece.Color.WHITE)
+            boardCopy.setTurn(Piece.Color.BLACK);
+        else
+            boardCopy.setTurn(Piece.Color.WHITE);
+        
         return boardCopy;
     }
     
