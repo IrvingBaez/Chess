@@ -232,10 +232,10 @@ public class GameController implements ActionListener{
     }
     
     public static void main(String[] args) {
-        ChessPlayer player1 = new HumanPlayer();
+        //ChessPlayer player1 = new HumanPlayer();
         //ChessPlayer player2 = new HumanPlayer();
         
-        //ChessPlayer player1 = new RandomMover();
+        ChessPlayer player1 = new RandomMover();
         //ChessPlayer player2 = new RandomMover();
 
         //ChessPlayer player1 = new ComputerMinimax(2, new MaterialThenSpace());
@@ -244,10 +244,8 @@ public class GameController implements ActionListener{
         ChessPlayer player2 = new AlphaBetaPruning(3, new MaterialGrabber());
         //ChessPlayer player2 = new ComputerMinimax(3, new MaterialGrabber());
         
-        for (int i = 1; i <= 10; i++) {
-            System.out.println("\n\nGAME " + i + "\n");
-            GameController control = new GameController(player1, player2);
-            control.view.setVisible(false);
-        }
+        System.out.println("\n\nGAME");
+        GameController control = new GameController(player1, player2);
+        control.view.setVisible(false);
     }
 }
