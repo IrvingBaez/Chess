@@ -40,6 +40,10 @@ public class Board implements Cloneable {
         this.initializeBoard();
     }
     
+    /**
+     * Makes the move on the board, it doesn't set the turn.
+     * @param move the move to make on the board.
+     */
     public void move(Move move){
         int iniCol = move.getOrigen().getColumnIndex();
         int iniRow = move.getOrigen().getRowIndex();
@@ -47,35 +51,44 @@ public class Board implements Cloneable {
         int endRow = move.getDestination().getRowIndex();
         Piece piece = this.boxes[iniCol][iniRow].getPiece();
         
+        //Levantar pieza a mover.
         this.boxes[iniCol][iniRow].removePiece();
         
+        //Quitar piza capturada.
         if(!this.isEmpty(move.getDestination())){
             this.pieces.remove(this.getOnPosition(move.getDestination()));
         }
         
+        //Comportamiento exclusivo de movimientos de peones.
         if(piece instanceof Pawn){
             if(endRow == 7 || endRow == 0){
+                //Coronación.
                 this.pieces.remove(piece);
                 piece = new Queen(piece.getColor(), move.getDestination());
                 piece.setBoard(this);
                 this.pieces.add(piece);
+                //Se permite EnPassant.
             }else if(iniRow == 1 && endRow == 3){
                 this.enPassant = new PawnEnPassant((Pawn)piece, new Position(Position.Column.values()[endCol],3));
             }else if(iniRow == 6 && endRow == 4){
                 this.enPassant = new PawnEnPassant((Pawn)piece, new Position(Position.Column.values()[endCol],6));
             }
             
+            //Se captura EnPassant
             if(enPassant != null && move.getDestination().equals(enPassant.pos)){
                 this.pieces.remove(this.getOnPosition(enPassant.pawn.getPosition()));
                 this.boxes[enPassant.pawn.getPosition().getColumnIndex()][enPassant.pawn.getPosition().getRowIndex()].removePiece();
+                System.out.println("\n\nBoard.Move() line 77: EnPassant.");
                 this.printBoard();
                 this.enPassant = null;
             }
         }
         
+        //Se pone la pieza en su casilla.
         this.boxes[endCol][endRow].setPiece(piece);
         piece.setPosition(move.getDestination());
         
+        //
         if(!(piece instanceof Pawn)){
             this.enPassant = null;
         }
@@ -83,6 +96,12 @@ public class Board implements Cloneable {
         this.lastMove = move;
     }
     
+    /**
+     * Finds and sets the state of the board, this can be: LIVE, WHITECHECK,
+     * BLACKCHECK, WHITEMATE, BLACKMATE, STALEMATE or INVALID.
+     * 
+     * Only the first three allow the game to continue.
+     */
     private void findState(){
         this.state = State.LIVE;
         this.fillSights();
@@ -121,6 +140,11 @@ public class Board implements Cloneable {
         }
     }
     
+    /**
+     * Makes a move in a copy of the board.
+     * @param move Move to make.
+     * @return Board with move made and next turn-color set.
+     */
     public Board copyAndMove(Move move){
         Board boardCopy = Board.copyBoard(this);
         boardCopy.move(move);
@@ -133,6 +157,11 @@ public class Board implements Cloneable {
         return boardCopy;
     }
     
+    /**
+     * Makes a copy of the given board.
+     * @param original board to copy.
+     * @return board copy.
+     */
     public static Board copyBoard(Board original){
         ArrayList<Piece> piecesCopy = new ArrayList<>();
         Class[] args = {Piece.Color.class, Position.class};
@@ -148,13 +177,19 @@ public class Board implements Cloneable {
         return new Board(original.turn, piecesCopy);
     }
 
+    /**
+     * Sets the pieces of the board on their position.
+     * This method is meant to be used only on this class constructor.
+     */
     private void initializeBoard(){
+        //Se inicializa el arreglo.
         for (int row = 0; row <= 7; row++) {
             for (int col = 0; col <= 7; col++) {
                 boxes[col][row] = new Box();
             }
         }
         
+        //Las piezas se colocan en posición y se guardan los reyes.
         for(Piece piece : this.pieces){
             int col = piece.getPosition().getColumnIndex();
             int row = piece.getPosition().getRowIndex();
@@ -174,7 +209,12 @@ public class Board implements Cloneable {
         }
     }
     
-    public final void fillSights(){
+    /**
+     * Fills the sights of all the pieces in the board.
+     * 
+     * Used to calculate threats.
+     */
+    private void fillSights(){
         this.whiteSight = new ArrayList();
         this.blackSight = new ArrayList();
         
@@ -197,6 +237,11 @@ public class Board implements Cloneable {
         }
     }
     
+    /**
+     * Fills the moves from all the pieces in the board.
+     * 
+     * This method always fills the sights first.
+     */
     public void fillMoves(){
         this.whiteMoves = new ArrayList();
         this.blackMoves = new ArrayList();
@@ -216,6 +261,9 @@ public class Board implements Cloneable {
         }
     }
 
+    /**
+     * Prints the board in console for debbugging purposes.
+     */
     public void printBoard(){
         //Right order to read the array.
         System.out.println();
@@ -232,6 +280,11 @@ public class Board implements Cloneable {
         }
     }
     
+    /**
+     * Checks if a position is empty in the board.
+     * @param pos position to check.
+     * @return true if the position is empty, false otherwise.
+     */
     public boolean isEmpty(Position pos){
         int col = pos.getColumnIndex();
         int row = pos.getRowIndex();
@@ -239,6 +292,11 @@ public class Board implements Cloneable {
         return boxes[col][row].isEmpty();
     }
     
+    /**
+     * Gets the piece from a position.
+     * @param pos position containing the piece.
+     * @return the piece in the position give.
+     */
     public Piece getOnPosition(Position pos){
         int col = pos.getColumnIndex();
         int row = pos.getRowIndex();
@@ -246,12 +304,72 @@ public class Board implements Cloneable {
         return boxes[col][row].getPiece();
     }
     
+    /**
+     * Gets the piece from a position.
+     * @param col position column index.
+     * @param row position row index.
+     * @return piece in the given position.
+     */
     public Piece getOnPosition(int col, int row){
         if(col < 0 || col > 7 || row < 1 || row > 8){
             return null;
         }
         
         return boxes[col][row-1].getPiece();
+    }
+    
+    /**
+     * Creates a FEN encoding of this board.
+     * @return FEN code.
+     */
+    public String getPositionFen(){
+        String fen = "";
+        Piece piece;
+        int empty = 0;
+        Box[][] boxesC = this.getBoxes();
+        
+        //Board
+        for (int row = 7; row >= 0; row--) {
+            for (int col = 0; col < 8; col++) {
+                if(boxesC[col][row].isEmpty()){
+                    empty++;
+                }else{
+                    piece = boxesC[col][row].getPiece();
+                    if (empty > 0){
+                        fen += empty;
+                        empty = 0;
+                    }
+                    if (piece.getColor() == Color.BLACK){
+                        fen += piece.getSymbol().substring(0, 1).toLowerCase();
+                    }else{
+                        fen += piece.getSymbol().substring(0, 1);
+                    }
+                }
+            }
+            if (empty > 0){
+                fen += empty;
+                empty = 0;
+            }
+            if(row > 0) fen += "/";
+        }
+        
+        //turn
+        switch (this.turn) {
+            case WHITE:
+                fen += " w";
+                break;
+            case BLACK:
+                fen += " b";
+                break;
+        }
+        
+        //Castling
+        fen += " -";
+        
+        //En Passant
+        fen += " -";
+        
+        return fen;
     }
     
     public State getState() {
@@ -315,56 +433,6 @@ public class Board implements Cloneable {
         return blackKing;
     }
     
-    public String getPositionFen(){
-        String fen = "";
-        Piece piece;
-        int empty = 0;
-        Box[][] boxesC = this.getBoxes();
-        
-        //Board
-        for (int row = 7; row >= 0; row--) {
-            for (int col = 0; col < 8; col++) {
-                if(boxesC[col][row].isEmpty()){
-                    empty++;
-                }else{
-                    piece = boxesC[col][row].getPiece();
-                    if (empty > 0){
-                        fen += empty;
-                        empty = 0;
-                    }
-                    if (piece.getColor() == Color.BLACK){
-                        fen += piece.getSymbol().substring(0, 1).toLowerCase();
-                    }else{
-                        fen += piece.getSymbol().substring(0, 1);
-                    }
-                }
-            }
-            if (empty > 0){
-                fen += empty;
-                empty = 0;
-            }
-            if(row > 0) fen += "/";
-        }
-        
-        //turn
-        switch (this.turn) {
-            case WHITE:
-                fen += " w";
-                break;
-            case BLACK:
-                fen += " b";
-                break;
-        }
-        
-        //Castling
-        fen += " -";
-        
-        //En Passant
-        fen += " -";
-        
-        return fen;
-    }
-    
     public ArrayList<Position> getMoves(Piece.Color color){
         if(color == Piece.Color.WHITE) {
             return this.getWhiteMoves();
@@ -373,6 +441,11 @@ public class Board implements Cloneable {
         }
     }
     
+    /**
+     * Creates a position on the board given a FEN string.
+     * This method is meant to be called in the constructor of this class.
+     * @param fen The string to turn into position.
+     */
     private void boardFromFEN(String fen){
         pieces = new ArrayList<>();
         Position pos;
