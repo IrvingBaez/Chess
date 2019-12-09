@@ -51,6 +51,6 @@ public class RandomMover extends ChessPlayer {
 
     @Override
     public String toString() {
-        return "Random Mover playing " + this.playerColor;
+        return "\nRandom Mover playing " + this.playerColor;
     }
 }

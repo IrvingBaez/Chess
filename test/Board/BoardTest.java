@@ -84,18 +84,6 @@ public class BoardTest {
     }
 
     /**
-     * Test of fillSights method, of class Board.
-     */
-    @Test
-    public void testFillSights() {
-        System.out.println("fillSights");
-        Board instance = null;
-        instance.fillSights();
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-
-    /**
      * Test of fillMoves method, of class Board.
      */
     @Test

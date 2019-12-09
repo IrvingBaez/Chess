@@ -13,14 +13,18 @@ public class AlphaBetaPruning extends ChessPlayer {
     private final ChessStrategy strategy;
     private final int depth;
     private boolean maxing;
+    private int analized;
 
     public AlphaBetaPruning(int depth, ChessStrategy strategy) {
         this.strategy = strategy;
-        this.depth = depth;   
+        this.depth = depth;
+        analized = 0;
     }
     
     @Override
     public Move move() {
+        analized = 0;
+        
         if(this.game == null){
             System.out.println("No board recieved.");
             return null;
@@ -29,10 +33,13 @@ public class AlphaBetaPruning extends ChessPlayer {
         ChessNode root = new ChessNode(this.game.getBoard());
         Move move = (Move)alphabeta(root, depth, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, maxing).getIdentifier();
         System.out.println(move);
+        System.out.println("Analized = " + analized);
         return move;
     }
     
     private ChessNode alphabeta(ChessNode node, int depth, double alpha, double beta, boolean maxing){
+        analized++;
+        
         double value;
         ChessNode best = node;
         
