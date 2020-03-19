@@ -5,13 +5,11 @@ import Minimax.TreeWithID;
 import Minimax.ChessNode;
 import Board.Board;
 import Board.Move;
-import Board.Position;
 import Pieces.Piece;
 import Strategies.ChessStrategy;
 import java.util.ArrayList;
 import java.util.Collections;
 import Minimax.MinimaxProcessor.Mode;
-import Pieces.Piece.Color;
 import java.util.Random;
 
 public class ComputerMinimax extends ChessPlayer{
